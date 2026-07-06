@@ -181,7 +181,7 @@ fun AmoledTrackerApp() {
             shape = RoundedCornerShape(32.dp)
         ) {
             Text(
-                if (isTracking) "STOP MEASURING",
+                if (isTracking) "STOP MEASURING" else "START MEASURING",
                 color = if (isTracking) pureWhite else pitchBlack,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
