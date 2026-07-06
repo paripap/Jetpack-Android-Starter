@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
         val sharedPrefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
         val lastCrash = sharedPrefs.getString("LAST_CRASH", null)
         
-        // If the app crashed last time, show the error on screen instead of the tracker!
         if (lastCrash != null) {
             setContent {
                 Column(
@@ -68,12 +67,12 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        // Intercept any new crashes and save them to memory
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
             sharedPrefs.edit().putString("LAST_CRASH", exception.stackTraceToString()).commit()
             defaultHandler?.uncaughtException(thread, exception) ?: exitProcess(1)
         }
+
         // -------------------------
 
         setContent {
@@ -103,6 +102,7 @@ fun AmoledTrackerApp() {
     var totalDistanceMeters by remember { mutableFloatStateOf(0f) }
     var topSpeed by remember { mutableFloatStateOf(0f) }
     var startElevation by remember { mutableDoubleStateOf(0.0) }
+    var endElevation by remember { mutableDoubleStateOf(0.0) }
     var hasFinishedTracking by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -111,7 +111,6 @@ fun AmoledTrackerApp() {
         hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
     }
 
-    // Safely hook into the GPS hardware without leaking memory
     DisposableEffect(hasLocationPermission) {
         var callback: LocationCallback? = null
         
@@ -145,7 +144,6 @@ fun AmoledTrackerApp() {
             permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
         
-        // Clean up the sensor when closed
         onDispose {
             callback?.let { fusedLocationClient.removeLocationUpdates(it) }
         }
@@ -192,7 +190,7 @@ fun AmoledTrackerApp() {
                     StatRow("Distance", "${String.format("%.2f", totalDistanceMeters / 1000f)} km")
                     StatRow("Avg Velocity", "${String.format("%.1f", averageSpeedKmH)} km/h")
                     StatRow("Top Velocity", "${String.format("%.1f", topSpeedKmH)} km/h")
-                    StatRow("Elevation Shift", "${(currentElevation - startElevation).roundToInt()} m")
+                    StatRow("Elevation Shift", "${(endElevation - startElevation).roundToInt()} m")
                 }
             }
         }
@@ -201,6 +199,7 @@ fun AmoledTrackerApp() {
             onClick = {
                 if (isTracking) {
                     isTracking = false
+                    endElevation = currentElevation
                     hasFinishedTracking = true
                 } else {
                     totalDistanceMeters = 0f
