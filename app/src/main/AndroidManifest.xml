@@ -33,6 +33,9 @@
         android:theme="@style/Theme.Jetpack.Splash"
         android:usesCleartextTraffic="true"
         tools:targetApi="tiramisu">
+<meta-data android:name="firebase_performance_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
 
         <profileable
             android:shell="true"
